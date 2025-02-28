@@ -52,6 +52,14 @@
         {
           "initialOrientation": "DEFAULT"
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow SilviBox to access your photos.",
+          "savePhotosPermission": "Allow SilviBox to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ],
     "experiments": {
