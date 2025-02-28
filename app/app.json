@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "SilviBox",
+    "slug": "silvibox",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/images/icons/android/play_store_512.png",
+    "scheme": "silvibox",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icons/android/play_store_512.png",
+        "backgroundColor": "#000"
+      },
+      "package": "com.sylvesteramara.silvibox"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icons/android/play_store_512.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icons/android/play_store_512.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000"
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow SilviBox to access your Face ID biometric data."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow SilviBox to use Face ID."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "cf65fd54-b96e-4a76-8f5d-3b0a42d16a8f"
+      }
+    }
+  }
+}
