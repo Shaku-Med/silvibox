@@ -9,7 +9,9 @@ import {
   Dimensions,
   Modal,
   Alert,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  RefreshControl,
+  DevSettings
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
@@ -18,6 +20,10 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { SafeAreaView } from 'react-native';
 import { ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAlerts } from 'react-native-paper-alerts';
+import { decryptMessage } from './Function/Client';
+import { handleAuthContext } from '../Context/Context';
 
 const { width, height } = Dimensions.get('window');
 const PIN_STORAGE_KEY = 'user_pin_code';
@@ -33,6 +39,10 @@ interface PinAuthProps {
 }
 
 const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
+  let {x} = handleAuthContext()
+  let router = useRouter()
+  let alert = useAlerts()
+  // 
   const [pin, setPin] = useState<string>('');
   const [confirmPin, setConfirmPin] = useState<string>('');
   const [oldPin, setOldPin] = useState<string>('');
@@ -292,10 +302,10 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
   
   const calculateLockoutTime = (attempts: number): number => {
     // Progressive lockout durations
-    if (attempts === 3) return 30 * 1000; // 30 seconds
-    if (attempts === 4) return 60 * 1000; // 1 minute
-    if (attempts === 5) return 5 * 60 * 1000; // 5 minutes
-    if (attempts >= 6) return 15 * 60 * 1000; // 15 minutes
+    if (attempts === 3) return 30 * 60 * 1000; // 30 seconds
+    if (attempts === 4) return 60 * 60 * 1000; // 1 minute
+    if (attempts === 5) return 1 * 60 * 60 * 1000; // 5 minutes
+    if (attempts >= 6) return 2 * 60 * 60 * 1000; // 15 minutes
     return 0;
   };
 
@@ -404,9 +414,18 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
       });
       
       if (result.success) {
-        setMode('reset');
-        setResetModalVisible(false);
-        return true;
+        let rq = false
+        await handleVerify((e: any) => {
+          rq = e
+        })
+        if(rq){
+          setMode('reset');
+          setResetModalVisible(false);
+          return true;
+        }
+        else {
+          return false
+        }
       } else {
         return false;
       }
@@ -419,6 +438,71 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
       return false;
     }
   };
+
+
+const handleVerify = async (callback: (status: boolean) => void) => {
+  try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert('Error', 'Biometric authentication is not available.');
+        return;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: `You need to validate your access.`,
+      });
+
+      if (!result.success) {
+        Alert.alert('Authentication Failed', 'Please try again or use your current PIN to reset.');
+        callback(false);
+        return;
+      }
+
+      const storedCode = await SecureStore.getItemAsync('ac');
+
+      if (!storedCode) {
+        callback(true);
+        return;
+      }
+
+      alert.prompt('Verification Needed!', 'Enter your access code to continue.', [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => callback(false),
+        },
+        {
+          text: 'Verify',
+          onPress: async (enteredCode: string) => {
+            try {
+              const decrypted = decryptMessage(storedCode, enteredCode);
+              if (decrypted) {
+                callback(true);
+              } else {
+                Alert.alert(
+                  'Access Grant Denied!',
+                  'Sorry, we are not allowing you to access this account. Please enter valid info to continue.'
+                );
+                callback(false);
+              }
+            } catch (error) {
+              console.error('Error during verification:', error);
+              Alert.alert('Error', 'Something went wrong.');
+              callback(false);
+            }
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      Alert.alert('Error', 'Something went wrong.');
+      callback(false);
+    }
+  };
+
+
 
   const handleSubmit = async () => {
     if (lockedUntil && lockedUntil > Date.now()) {
@@ -452,7 +536,31 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
       }
     } else if (mode === 'login') {
       if (pin.length === PIN_MAX_LENGTH) {
-        await verifyPin(pin);
+        let v = await verifyPin(pin);
+        if(v){
+          // 
+          let rg = false
+          await handleVerify((e: boolean) => {
+            rg = e
+          })
+          // 
+          if(rg){
+            x.current = true
+            router.replace(`/(home)`)
+            // DevSettings.reload()
+          }
+          else {
+            Alert.alert('Login failed!', `Please try again later.`, [
+              {
+                text: 'OK'
+              }
+            ])
+          }
+        }
+        else {
+          setErrorMessage('Incorrect PIN. Please try again.');
+          runShakeAnimation();
+        }
       } else {
         setErrorMessage('Please enter all 6 digits.');
         runShakeAnimation();
@@ -472,7 +580,6 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
       }
       
       if (oldPin.length === PIN_MAX_LENGTH && pin.length === PIN_MAX_LENGTH && confirmPin.length === 0) {
-        // Move to confirmation step
         return;
       }
       
@@ -690,8 +797,12 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
               <TouchableOpacity 
                 style={[styles.modalButton, styles.modalButtonConfirm]}
                 onPress={() => {
-                  setResetModalVisible(false);
-                  setMode('reset');
+                  handleVerify((e: boolean) => {
+                    if(e){
+                      setResetModalVisible(false);
+                      setMode('reset');
+                    }
+                  })
                 }}
               >
                 <ThemedText style={[styles.modalButtonText, styles.modalButtonTextConfirm]}>
@@ -737,55 +848,8 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
                 >
                   {renderPinDots()}
                 </Animated.View>
-                
                 <ThemedView style={styles.buttonContainer}>
                   {renderNumberButtons()}
-                  
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      getCurrentPinLength() === PIN_MAX_LENGTH && (!lockedUntil || lockedUntil <= Date.now()) 
-                        ? styles.submitButtonActive 
-                        : {},
-                      lockedUntil && lockedUntil > Date.now() ? styles.disabledButton : {}
-                    ]}
-                    onPress={handleSubmit}
-                    activeOpacity={0.8}
-                    disabled={lockedUntil && lockedUntil > Date.now()}
-                  >
-                    <ThemedText style={[
-                      styles.submitButtonText,
-                      getCurrentPinLength() === PIN_MAX_LENGTH && (!lockedUntil || lockedUntil <= Date.now()) 
-                        ? styles.submitButtonTextActive 
-                        : {},
-                      lockedUntil && lockedUntil > Date.now() ? styles.disabledButtonText : {}
-                    ]}>
-                      {mode === 'create' && pin.length === PIN_MAX_LENGTH && confirmPin.length === 0 
-                        ? "Next" 
-                        : "Confirm"}
-                    </ThemedText>
-                  </TouchableOpacity>
-                  
-                  {mode !== 'login' && (
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => {
-                        if (isPinSet) {
-                          setMode('login');
-                        } else if (onCancel) {
-                          onCancel();
-                        }
-                      }}
-                      disabled={lockedUntil && lockedUntil > Date.now()}
-                    >
-                      <ThemedText style={[
-                        styles.cancelButtonText,
-                        lockedUntil && lockedUntil > Date.now() ? styles.disabledButtonText : {}
-                      ]}>
-                        Cancel
-                      </ThemedText>
-                    </TouchableOpacity>
-                  )}
                 </ThemedView>
               </KeyboardAvoidingView>
               
@@ -793,6 +857,54 @@ const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
             </Animated.View>
           </SafeAreaView>
        </ScrollView>
+      <ThemedView style={styles.buttonContainer}>
+        
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            getCurrentPinLength() === PIN_MAX_LENGTH && (!lockedUntil || lockedUntil <= Date.now()) 
+              ? styles.submitButtonActive 
+              : {},
+            lockedUntil && lockedUntil > Date.now() ? styles.disabledButton : {}
+          ]}
+          onPress={handleSubmit}
+          activeOpacity={0.8}
+          disabled={lockedUntil && lockedUntil > Date.now()}
+        >
+          <ThemedText style={[
+            styles.submitButtonText,
+            getCurrentPinLength() === PIN_MAX_LENGTH && (!lockedUntil || lockedUntil <= Date.now()) 
+              ? styles.submitButtonTextActive 
+              : {},
+            lockedUntil && lockedUntil > Date.now() ? styles.disabledButtonText : {}
+          ]}>
+            {mode === 'create' && pin.length === PIN_MAX_LENGTH && confirmPin.length === 0 
+              ? "Next" 
+              : "Confirm"}
+          </ThemedText>
+        </TouchableOpacity>
+        
+        {mode !== 'login' && (
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => {
+              if (isPinSet) {
+                setMode('login');
+              } else if (onCancel) {
+                onCancel();
+              }
+            }}
+            disabled={lockedUntil && lockedUntil > Date.now()}
+          >
+            <ThemedText style={[
+              styles.cancelButtonText,
+              lockedUntil && lockedUntil > Date.now() ? styles.disabledButtonText : {}
+            ]}>
+              Cancel
+            </ThemedText>
+          </TouchableOpacity>
+        )}
+      </ThemedView>
     </ThemedView>
   );
 };

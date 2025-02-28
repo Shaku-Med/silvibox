@@ -3,7 +3,7 @@
     "name": "SilviBox",
     "slug": "silvibox",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "portrait",
     "icon": "./assets/images/icons/android/play_store_512.png",
     "scheme": "silvibox",
     "userInterfaceStyle": "automatic",
@@ -45,6 +45,12 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow SilviBox to use Face ID."
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
         }
       ]
     ],

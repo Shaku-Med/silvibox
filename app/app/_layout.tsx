@@ -9,6 +9,9 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthContext } from './Context/Context';
 import IsAuth from './IsAuth/IsAuth';
+import {Provider as PaperProvider } from 'react-native-paper';
+
+import { AlertsProvider } from 'react-native-paper-alerts';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -19,7 +22,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  let x = useRef<boolean>(IsAuth())
+  let x = useRef<boolean>(false)
 
   useEffect(() => {
     if (loaded) {
@@ -33,9 +36,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthContext.Provider value={{x}}>
-           <Slot/>
-        </AuthContext.Provider>
+        <PaperProvider>
+          <AlertsProvider>
+            <AuthContext.Provider value={{x}}>
+              <Slot/>
+            </AuthContext.Provider>
+          </AlertsProvider>
+        </PaperProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
