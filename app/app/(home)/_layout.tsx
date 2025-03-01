@@ -1,7 +1,7 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Drawer } from 'expo-router/drawer';
 import { useEffect } from 'react';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Stack } from 'expo-router';
 
 export default function Layout() {
   useEffect(() => {
@@ -10,9 +10,9 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer screenOptions={{ headerShown: false }}>
-        <Drawer.Screen name="(tabs)" />
-      </Drawer>
+      <Stack initialRouteName={`(tabs)`} screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
     </GestureHandlerRootView>
   );
 }

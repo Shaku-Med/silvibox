@@ -10,7 +10,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthContext } from './Context/Context';
 import IsAuth from './IsAuth/IsAuth';
 import {Provider as PaperProvider } from 'react-native-paper';
-import { enableScreens } from 'react-native-screens';
+// import { enableScreens } from 'react-native-screens';
 
 import { AlertsProvider } from 'react-native-paper-alerts';
 import { Platform } from 'react-native';
@@ -27,22 +27,21 @@ export default function RootLayout() {
   let x = useRef<boolean>(false)
   let [goback, setgoback] = useState<string | any>(null)
 
-  let DisableScreen = async () => {
-    if (Platform.OS === 'android') {
-      const FLAG_SECURE = 0x00002000;
-      const activity = require('react-native').NativeModules.UIManager.getViewManagerConfig('RCTRootView').Constants;
-      const context = require('react-native').NativeModules.UIManager.dispatchViewManagerCommand;
+  // let DisableScreen = async () => {
+  //   if (Platform.OS === 'android') {
+  //     const FLAG_SECURE = 0x00002000;
+  //     const activity = require('react-native').NativeModules.UIManager.getViewManagerConfig('RCTRootView').Constants;
+  //     const context = require('react-native').NativeModules.UIManager.dispatchViewManagerCommand;
 
-      context(activity, 'setFlags', [FLAG_SECURE, FLAG_SECURE]);
-    } else if (Platform.OS === 'ios') {
-      require('react-native').NativeModules.Screens.setSecure(true);
-    }
-  }
+  //     context(activity, 'setFlags', [FLAG_SECURE, FLAG_SECURE]);
+  //   } else if (Platform.OS === 'ios') {
+  //     require('react-native').NativeModules.Screens.setSecure(true);
+  //   }
+  // }
 
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
-      DisableScreen()
     }
   }, [loaded]);
 
