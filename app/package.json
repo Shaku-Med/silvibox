@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@react-native-menu/menu": "^1.2.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",
@@ -39,6 +40,7 @@
     "expo-router": "~4.0.17",
     "expo-screen-orientation": "~8.0.4",
     "expo-secure-store": "^14.0.1",
+    "expo-sharing": "~13.0.1",
     "expo-splash-screen": "~0.29.22",
     "expo-status-bar": "~2.0.1",
     "expo-symbols": "~0.2.2",
@@ -49,6 +51,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.7",
+    "react-native-calendars": "^1.1310.0",
     "react-native-crypto": "^2.2.0",
     "react-native-crypto-js": "^1.0.0",
     "react-native-document-picker": "^9.3.1",
@@ -64,8 +67,7 @@
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
     "tailwind-merge": "^3.0.2",
-    "tailwindcss": "^3.4.17",
-    "expo-sharing": "~13.0.1"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
