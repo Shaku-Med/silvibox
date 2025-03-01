@@ -9,14 +9,33 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "App requires access to the photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icons/android/play_store_512.png",
         "backgroundColor": "#000"
       },
-      "package": "com.sylvesteramara.silvibox"
+      "package": "com.sylvesteramara.silvibox",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -60,6 +79,18 @@
           "savePhotosPermission": "Allow SilviBox to save photos.",
           "isAccessMediaLocationEnabled": true
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "allow SilviBox to access your photos."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow SilviBox to access your microphone."
+        }
       ]
     ],
     "experiments": {
@@ -72,6 +103,12 @@
       "eas": {
         "projectId": "cf65fd54-b96e-4a76-8f5d-3b0a42d16a8f"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/cf65fd54-b96e-4a76-8f5d-3b0a42d16a8f"
     }
   }
 }

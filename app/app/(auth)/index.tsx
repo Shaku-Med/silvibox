@@ -13,7 +13,7 @@ import {
   RefreshControl,
   DevSettings
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { ThemedView } from '@/components/ThemedView';
@@ -22,8 +22,8 @@ import { SafeAreaView } from 'react-native';
 import { ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAlerts } from 'react-native-paper-alerts';
-import { decryptMessage } from './Function/Client';
 import { handleAuthContext } from '../Context/Context';
+import Objects from './Function/Client';
 
 const { width, height } = Dimensions.get('window');
 const PIN_STORAGE_KEY = 'user_pin_code';
@@ -39,7 +39,7 @@ interface PinAuthProps {
 }
 
 const PinAuthScreen: React.FC<PinAuthProps> = ({ onSuccess, onCancel }) => {
-  let {x} = handleAuthContext()
+  let {x, goback, setgoback} = handleAuthContext()
   let router = useRouter()
   let alert = useAlerts()
   // 
@@ -477,7 +477,7 @@ const handleVerify = async (callback: (status: boolean) => void) => {
           text: 'Verify',
           onPress: async (enteredCode: string) => {
             try {
-              const decrypted = decryptMessage(storedCode, enteredCode);
+              const decrypted = Objects.encDec(storedCode, enteredCode, true, null);
               if (decrypted) {
                 callback(true);
               } else {
@@ -539,23 +539,34 @@ const handleVerify = async (callback: (status: boolean) => void) => {
         let v = await verifyPin(pin);
         if(v){
           // 
-          let rg = false
           await handleVerify((e: boolean) => {
-            rg = e
+            if(e === true){
+              x.current = true
+              let g: any = goback
+              let rt: any = (g && typeof g === 'object') ? {
+                pathname: g?.returnto?.endpoint,
+                params: g?.returnto?.params
+              } : `/(home)`
+              // 
+              if(g && typeof g === 'object'){
+                setgoback({
+                  ...goback,
+                  verified: true
+               })
+              }
+              
+              router.replace(rt)
+              // DevSettings.reload()
+            }
+            else if(e === false) {
+              Alert.alert('Login failed!', `Please try again later.`, [
+                {
+                  text: 'OK'
+                }
+              ])
+            }
           })
           // 
-          if(rg){
-            x.current = true
-            router.replace(`/(home)`)
-            // DevSettings.reload()
-          }
-          else {
-            Alert.alert('Login failed!', `Please try again later.`, [
-              {
-                text: 'OK'
-              }
-            ])
-          }
         }
         else {
           setErrorMessage('Incorrect PIN. Please try again.');
@@ -883,6 +894,31 @@ const handleVerify = async (callback: (status: boolean) => void) => {
               : "Confirm"}
           </ThemedText>
         </TouchableOpacity>
+
+          {
+            goback && (
+              <ThemedText onPress={e => {
+                setgoback(null)
+                router.back()
+                Vibration.vibrate(30)
+              }} style={{
+                padding: 10,
+                backgroundColor: 'purple',
+                width: '100%',
+                textAlign: 'center',
+                flexDirection: 'row',
+                gap: 2,
+                marginTop: 5,
+                marginBlock: 5,
+                color: 'white',
+                alignItems: 'center',
+                justifyContent: 'center',
+                display: 'flex'
+              }}>
+                  <ThemedText>Go Back</ThemedText>
+              </ThemedText>
+            )
+          }
         
         {mode !== 'login' && (
           <TouchableOpacity

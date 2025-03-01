@@ -5,14 +5,13 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function Layout() {
   useEffect(() => {
-    ScreenOrientation.Orientation.LANDSCAPE_LEFT
-  })
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer screenOptions={{ headerShown: false }}>
-        <Drawer.Screen
-          name="(tabs)"
-        />
+        <Drawer.Screen name="(tabs)" />
       </Drawer>
     </GestureHandlerRootView>
   );
